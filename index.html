@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>A small question</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #1a0d12;
+    --wine: #3a1522;
+    --candle: #f0bd78;
+    --rose: #e29a9a;
+    --ivory: #f8eee2;
+    --ivory-soft: rgba(248, 238, 226, 0.72);
+    --glass: rgba(26, 13, 18, 0.58);
+    --line: rgba(240, 189, 120, 0.38);
+    --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --sans: "Jost", "Helvetica Neue", Arial, sans-serif;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0;
+    height: 100%;
+    background: var(--night);
+    color: var(--ivory);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* ---------- Café scene (drawn, no external photo) ---------- */
+  .scene { position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 108%, rgba(240,189,120,.55), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 18% 20%, rgba(226,154,154,.22), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 85% 30%, rgba(240,189,120,.2), transparent 70%),
+      linear-gradient(180deg, #2a101b 0%, #1a0d12 55%, #2b1411 100%);
+  }
+  .scene .window {
+    position: absolute; left: 50%; top: 6%;
+    width: min(70vw, 520px); height: 48%;
+    transform: translateX(-50%);
+    border-radius: 999px 999px 0 0;
+    background: linear-gradient(180deg, rgba(240,189,120,.22), rgba(226,154,154,.08) 70%, transparent);
+    filter: blur(22px);
+  }
+  .scene .bokeh { position: absolute; inset: 0; }
+  .scene .bokeh i {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, var(--c) 0%, transparent 68%);
+    filter: blur(var(--b));
+    opacity: var(--o);
+    animation: drift var(--d) ease-in-out infinite alternate;
+  }
+  @keyframes drift { from { transform: translateY(0) scale(1); } to { transform: translateY(-14px) scale(1.06); } }
+  .scene .strings {
+    position: absolute; left: 0; right: 0; top: 0; height: 120px; width: 100%;
+  }
+  .scene .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(10,4,7,.78) 100%);
+  }
+  .scene .grain {
+    position: absolute; inset: 0; opacity: .18; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- Layout ---------- */
+  main {
+    position: relative; z-index: 1;
+    height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .card {
+    width: 100%; max-width: 480px;
+    margin: auto;
+    padding: 38px 28px 30px;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 24px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+    text-align: center;
+  }
+  .step { display: none; }
+  .step.active { display: block; animation: arrive .55s cubic-bezier(.2,.7,.2,1); }
+  @keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(30px, 8vw, 42px);
+    line-height: 1.12;
+    letter-spacing: .005em;
+    margin: 0 0 28px;
+    text-wrap: balance;
+  }
+  h1.final { font-style: italic; font-size: clamp(30px, 7.6vw, 40px); line-height: 1.22; margin-bottom: 18px; }
+  .hint { color: var(--ivory-soft); font-size: 14px; margin: -14px 0 24px; }
+
+  .progress { display: flex; justify-content: center; gap: 8px; margin: 0 0 26px; }
+  .progress span { width: 22px; height: 3px; border-radius: 3px; background: rgba(248,238,226,.2); transition: background .4s; }
+  .progress span.on { background: var(--candle); }
+
+  /* ---------- Buttons ---------- */
+  button { font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--candle); outline-offset: 3px; }
+
+  .btn {
+    display: block; width: 100%;
+    padding: 15px 22px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(248,238,226,.06);
+    font-size: 16px; font-weight: 500; letter-spacing: .02em;
+    transition: transform .15s, background .25s, border-color .25s, opacity .3s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn.primary {
+    background: linear-gradient(135deg, #f0bd78, #e29a9a);
+    color: #2a101b; border-color: transparent;
+    box-shadow: 0 10px 28px rgba(226,154,154,.28);
+  }
+  .actions { display: flex; flex-direction: column; gap: 12px; position: relative; min-height: 118px; }
+  #noBtn { transition: left .28s cubic-bezier(.3,1.4,.5,1), top .28s cubic-bezier(.3,1.4,.5,1), transform .15s; }
+  #noBtn.loose { position: fixed; margin: 0; z-index: 20; touch-action: none; }
+
+  .confirm-wrap { margin-top: 24px; }
+  .confirm-wrap[hidden] { display: none; }
+  .confirm-wrap .btn { animation: arrive .4s ease; }
+
+  /* ---------- Choices ---------- */
+  .choices { display: grid; gap: 10px; text-align: left; }
+  .choices.two { grid-template-columns: 1fr 1fr; }
+  .choice {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(248,238,226,.2);
+    background: rgba(248,238,226,.05);
+    font-size: 16px; text-align: left;
+    transition: background .2s, border-color .2s, transform .15s;
+  }
+  .choices.two .choice { text-align: center; padding: 14px 10px; }
+  .choice:active { transform: scale(.98); }
+  .choice[aria-checked="true"] {
+    border-color: var(--candle);
+    background: rgba(240,189,120,.16);
+    box-shadow: inset 0 0 0 1px var(--candle);
+  }
+
+  .field { margin-top: 16px; text-align: left; }
+  .field[hidden] { display: none; }
+  .field label { display: block; font-size: 14px; color: var(--ivory-soft); margin: 0 0 8px 4px; }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(248,238,226,.28);
+    background: rgba(10,4,7,.45);
+    color: var(--ivory);
+    font: inherit; font-size: 16px; /* 16px stops iOS zoom */
+  }
+  textarea { min-height: 120px; resize: vertical; }
+  ::placeholder { color: rgba(248,238,226,.4); }
+
+  .sub { color: var(--ivory-soft); font-size: 15px; margin: 0 0 22px; }
+  .tiny { margin-top: 14px; font-size: 13px; color: var(--ivory-soft); min-height: 1.3em; }
+  .ghost { margin-top: 10px; background: none; }
+
+  @media (min-width: 520px) { .card { padding: 44px 40px 36px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .scene .bokeh i, .step.active, .confirm-wrap .btn { animation: none; }
+    #noBtn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <div class="window"></div>
+  <div class="bokeh" id="bokeh"></div>
+  <svg class="strings" viewBox="0 0 400 120" preserveAspectRatio="none">
+    <path d="M-10 18 Q 100 78 200 36 T 410 30" fill="none" stroke="rgba(240,189,120,.35)" stroke-width="1"/>
+    <path d="M-10 54 Q 120 104 230 62 T 410 70" fill="none" stroke="rgba(240,189,120,.22)" stroke-width="1"/>
+  </svg>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+</div>
+
+<main>
+  <div class="card" id="card">
+    <div class="progress" id="progress" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+    <!-- 1 -->
+    <section class="step active" id="s1" aria-live="polite">
+      <h1>Can we go to Chillout after the paper process?</h1>
+      <div class="actions" id="actions1">
+        <button class="btn primary" id="yesBtn" type="button">Yes, no problem</button>
+        <button class="btn" id="noBtn" type="button">No, not in the mood</button>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="step" id="s2">
+      <h1>Where would you like to go?</h1>
+      <div class="choices" role="radiogroup" aria-label="Place" data-group="place">
+        <button class="choice" type="button" role="radio" aria-checked="false">Pyramids View</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Nile View</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Masr El Gedida</button>
+        <button class="choice" type="button" role="radio" aria-checked="false" data-other="1">A place you like</button>
+      </div>
+      <div class="field" id="otherField" hidden>
+        <label for="otherPlace">Write the name of the place you like</label>
+        <input type="text" id="otherPlace" autocomplete="off" maxlength="120" placeholder="Place name">
+      </div>
+      <div class="confirm-wrap" id="c2" hidden><button class="btn primary" type="button" data-confirm="2">Confirm</button></div>
+    </section>
+
+    <!-- 3 -->
+    <section class="step" id="s3">
+      <h1>What food do you like?</h1>
+      <div class="choices two" role="radiogroup" aria-label="Food" data-group="food">
+        <button class="choice" type="button" role="radio" aria-checked="false">Breakfast</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Pizza</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Burger</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Shawarma</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Indian</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Turkish</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Korean</button>
+        <button class="choice" type="button" role="radio" aria-checked="false">Chinese</button>
+      </div>
+      <div class="confirm-wrap" id="c3" hidden><button class="btn primary" type="button" data-confirm="3">Confirm</button></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="step" id="s4">
+      <h1>Favorite drink and dessert?</h1>
+      <div class="field" style="margin-top:0">
+        <label for="treat" class="sr" style="position:absolute;left:-9999px">Favorite drink and dessert</label>
+        <textarea id="treat" maxlength="300" placeholder="Type your answer here"></textarea>
+      </div>
+      <div class="confirm-wrap" id="c4" hidden><button class="btn primary" type="button" data-confirm="4">Confirm</button></div>
+    </section>
+
+    <!-- Final -->
+    <section class="step" id="s5">
+      <h1 class="final">Thank you! I will be waiting in front of your house Wednesday at 9 AM.</h1>
+      <p class="sub">Your answers are ready to send. Tap the button below to send them on WhatsApp.</p>
+      <a class="btn primary" id="sendBtn" href="https://wa.me/201553531166" style="text-decoration:none;text-align:center">Send my answers on WhatsApp</a>
+      <button class="btn ghost" type="button" id="copyBtn">Copy my answers</button>
+      <p class="tiny" id="sendNote" role="status"></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  var EMAIL = "hazem.ashraf999@gmail.com";
+  var answers = { chillout: "", place: "", food: "", drinkAndDessert: "" };
+  var current = 1;
+
+  /* ---------- Bokeh lights ---------- */
+  var bokeh = document.getElementById("bokeh");
+  var colors = ["rgba(240,189,120,.95)", "rgba(226,154,154,.9)", "rgba(255,226,170,.9)", "rgba(210,120,140,.85)"];
+  for (var i = 0; i < 26; i++) {
+    var el = document.createElement("i");
+    var size = 28 + Math.random() * 90;
+    el.style.cssText =
+      "left:" + (Math.random() * 100) + "%;" +
+      "top:" + (Math.random() * 78) + "%;" +
+      "width:" + size + "px;height:" + size + "px;" +
+      "--c:" + colors[i % colors.length] + ";" +
+      "--b:" + (2 + Math.random() * 7).toFixed(1) + "px;" +
+      "--o:" + (0.18 + Math.random() * 0.4).toFixed(2) + ";" +
+      "--d:" + (4 + Math.random() * 6).toFixed(1) + "s;";
+    bokeh.appendChild(el);
+  }
+
+  /* ---------- Steps ---------- */
+  var dots = document.querySelectorAll("#progress span");
+  function go(n) {
+    document.querySelector(".step.active").classList.remove("active");
+    document.getElementById("s" + n).classList.add("active");
+    current = n;
+    var prog = document.getElementById("progress");
+    if (n === 5) { prog.style.display = "none"; }
+    for (var d = 0; d < dots.length; d++) dots[d].classList.toggle("on", d < n);
+    var h = document.querySelector("#s" + n + " h1");
+    if (h) { h.setAttribute("tabindex", "-1"); }
+    document.getElementById("card").scrollIntoView({ block: "center" });
+  }
+  go(1);
+
+  /* ---------- Step 1: Yes + the button that runs away ---------- */
+  var yes = document.getElementById("yesBtn");
+  var no = document.getElementById("noBtn");
+
+  yes.addEventListener("click", function () {
+    answers.chillout = "Yes, no problem";
+    no.style.display = "none";
+    go(2);
+  });
+
+  function overlaps(a, b, pad) {
+    return !(a.right + pad < b.left || a.left - pad > b.right || a.bottom + pad < b.top || a.top - pad > b.bottom);
+  }
+
+  function escape(px, py) {
+    var vw = window.innerWidth, vh = window.innerHeight, m = 12;
+    var wasLoose = no.classList.contains("loose");
+    var cr = no.getBoundingClientRect();
+    var yr = yes.getBoundingClientRect();
+    var w = wasLoose ? no.offsetWidth : Math.max(cr.width, 170), h = cr.height;
+    no.classList.add("loose");
+    if (!wasLoose) no.style.width = w + "px";
+    var best = null;
+    for (var t = 0; t < 40; t++) {
+      var x = m + Math.random() * Math.max(1, vw - w - 2 * m);
+      var y = m + Math.random() * Math.max(1, vh - h - 2 * m);
+      var rect = { left: x, top: y, right: x + w, bottom: y + h };
+      var cx = x + w / 2, cy = y + h / 2;
+      var far = (typeof px !== "number") || Math.hypot(cx - px, cy - py) > 140;
+      var moved = Math.hypot(x - cr.left, y - cr.top) > 90 || !wasLoose;
+      if (far && moved && !overlaps(rect, yr, 10)) { best = { x: x, y: y }; break; }
+      if (!best) best = { x: x, y: y };
+    }
+    if (!wasLoose) {
+      no.style.left = cr.left + "px"; no.style.top = cr.top + "px";
+      document.body.appendChild(no);
+      no.offsetWidth;
+    }
+    no.style.left = best.x + "px";
+    no.style.top = best.y + "px";
+  }
+
+  function dodge(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var p = e && (e.touches && e.touches[0] ? e.touches[0] : e);
+    escape(p && p.clientX, p && p.clientY);
+  }
+  ["pointerenter", "mouseover", "pointerdown", "mousedown", "click", "focus"].forEach(function (ev) {
+    no.addEventListener(ev, dodge);
+  });
+  no.addEventListener("touchstart", dodge, { passive: false });
+  no.addEventListener("touchend", function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener("pointermove", function (e) {
+    if (current !== 1) return;
+    var r = no.getBoundingClientRect();
+    if (Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) < 70) {
+      escape(e.clientX, e.clientY);
+    }
+  });
+  window.addEventListener("resize", function () {
+    if (!no.classList.contains("loose")) return;
+    var r = no.getBoundingClientRect();
+    var x = Math.min(Math.max(12, r.left), Math.max(12, window.innerWidth - r.width - 12));
+    var y = Math.min(Math.max(12, r.top), Math.max(12, window.innerHeight - r.height - 12));
+    no.style.left = x + "px"; no.style.top = y + "px";
+  });
+
+  /* ---------- Choice groups (steps 2 & 3) ---------- */
+  var otherField = document.getElementById("otherField");
+  var otherInput = document.getElementById("otherPlace");
+  var selected = { place: null, food: null };
+
+  function refreshConfirm2() {
+    var ok = !!selected.place && (!selected.place.hasAttribute("data-other") || otherInput.value.trim().length > 0);
+    document.getElementById("c2").hidden = !ok;
+  }
+
+  document.querySelectorAll(".choices").forEach(function (group) {
+    var key = group.getAttribute("data-group");
+    group.addEventListener("click", function (e) {
+      var btn = e.target.closest(".choice");
+      if (!btn) return;
+      group.querySelectorAll(".choice").forEach(function (c) { c.setAttribute("aria-checked", "false"); });
+      btn.setAttribute("aria-checked", "true");
+      selected[key] = btn;
+      if (key === "place") {
+        var isOther = btn.hasAttribute("data-other");
+        otherField.hidden = !isOther;
+        if (isOther) setTimeout(function () { otherInput.focus(); }, 60);
+        refreshConfirm2();
+      } else {
+        document.getElementById("c3").hidden = false;
+      }
+    });
+  });
+  otherInput.addEventListener("input", refreshConfirm2);
+
+  /* ---------- Step 4 ---------- */
+  var treat = document.getElementById("treat");
+  treat.addEventListener("input", function () {
+    document.getElementById("c4").hidden = treat.value.trim().length === 0;
+  });
+
+  /* ---------- Confirm buttons ---------- */
+  document.querySelectorAll("[data-confirm]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var n = Number(b.getAttribute("data-confirm"));
+      if (n === 2) {
+        if (!selected.place) return;
+        if (selected.place.hasAttribute("data-other")) {
+          var v = otherInput.value.trim();
+          if (!v) { otherInput.focus(); return; }
+          answers.place = v;
+        } else {
+          answers.place = selected.place.textContent.trim();
+        }
+        go(3);
+      } else if (n === 3) {
+        if (!selected.food) return;
+        answers.food = selected.food.textContent.trim();
+        go(4);
+      } else if (n === 4) {
+        var t = treat.value.trim();
+        if (!t) { treat.focus(); return; }
+        answers.drinkAndDessert = t;
+        go(5);
+        prepareSend();
+      }
+    });
+  });
+
+  /* ---------- Sending answers ---------- */
+  function summary() {
+    return [
+      "Can we go to Chillout after the paper process? " + answers.chillout,
+      "Where would you like to go? " + answers.place,
+      "What food do you like? " + answers.food,
+      "Favorite drink and dessert? " + answers.drinkAndDessert
+    ].join("\n");
+  }
+  var note = document.getElementById("sendNote");
+
+  var WA = "201553531166";
+  var sendBtn = document.getElementById("sendBtn");
+  function waLink() {
+    return "https://wa.me/" + WA + "?text=" + encodeURIComponent("My answers for Wednesday:\n\n" + summary());
+  }
+  function prepareSend() {
+    sendBtn.setAttribute("href", waLink());
+    note.textContent = "Tap the button to open WhatsApp, then press send.";
+  }
+  sendBtn.addEventListener("click", function () { sendBtn.setAttribute("href", waLink()); });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var text = summary();
+    function done(ok) { note.textContent = ok ? "Copied. You can paste it into a message." : "Copy didn't work. Select the answers and copy them by hand."; }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+        return;
+      }
+    } catch (e) {}
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand("copy"); document.body.removeChild(ta); done(ok);
+    } catch (e) { done(false); }
+  });
+})();
+</script>
+</body>
+</html>
